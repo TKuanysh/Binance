@@ -5,11 +5,13 @@ import binance.common.CacheUsdt;
 import binance.model.AbsDelta;
 import binance.model.OrderBook;
 import binance.model.Ticker;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static binance.common.UrlConstants.CRON_EXP;
@@ -17,6 +19,12 @@ import static binance.common.Utils.*;
 
 @Component
 public class JobTenSecond {
+    private final MeterRegistry meterRegistry;
+
+    public JobTenSecond(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
     @Scheduled(cron = CRON_EXP)
     public void execute() {
         System.out.println("Run Job");
@@ -106,7 +114,9 @@ public class JobTenSecond {
                 abs.setPrevious(previous);
                 delta.put(t.getSymbol(), abs);
                 //Q5
-                System.out.println(t.getSymbol() + " delta: " + absDelta(t.getAskPrice() - t.getBidPrice(), previous));
+                //System.out.println(t.getSymbol() + " delta: " + absDelta(t.getAskPrice() - t.getBidPrice(), previous));
+                AtomicInteger manual_gauge = meterRegistry.gauge(t.getSymbol(), new AtomicInteger(0));
+                manual_gauge.set((int) absDelta(t.getAskPrice() - t.getBidPrice(), previous));
             }
 
         } catch (Exception e) {

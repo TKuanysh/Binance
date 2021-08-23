@@ -21,6 +21,7 @@ public class HttpClient {
             int status = con.getResponseCode();
 
             if (status > 299) {
+                System.out.println(con.getResponseCode());
                 return null;
             } else {
                 try (BufferedReader in = new BufferedReader(
